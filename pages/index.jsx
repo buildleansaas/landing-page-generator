@@ -1,10 +1,14 @@
+// REACT + UTIL LIBRARIES
+// ---------------
+//
+// ---------------
+
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import { isEmpty } from "lodash";
 import Image from "next/image";
 import axios from "axios";
-
 import {
-  Avatar,
   Box,
   Button,
   chakra,
@@ -18,51 +22,63 @@ import {
   Text,
   useBreakpointValue,
   VStack,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { FiMenu } from "react-icons/fi";
 
-const PRODUCTS = [
-  {
-    test: {
-      key: "prod_LlP82vwLfVC206",
-    },
-    production: {
-      key: "prod_LlP82vwLfVC206",
-    },
-  },
-];
+// BUSINESS LOGIC LIBRARIES
+// ---------------
+//
+// ---------------
 
+import { format } from "date-fns";
+import TawkTo from "tawkto-react";
+
+// PROJECT CONFIGURATION
+// ---------------
+//
+// ---------------
+
+import { getProjectConfig } from "lib/sanity/config";
+import { getDomain } from "utils";
+import useAlerts from "hooks/useAlerts";
+
+// COMPONENTS
+// ---------------
+//
+// ---------------
+
+import Dialog from "components/Dialog";
+import Block from "components/Block";
+
+const StripSubscriptionPortalButton = () => {};
+
+// LOCAL CONSTANTS
+// ---------------
+//
+// ---------------
 export const THIS_ENV = process.env.NODE_ENV === "development" ? "test" : "prod";
 
-export const getAllProductKeys = () =>
-  Object.values(PRODUCTS)
-    .map((p) => p[THIS_ENV].key)
-    .filter(Boolean);
+// LANGING PAGE RENDER
+// ---------------
+//
+// ---------------
 
-export default function Home({
-  hook = "SaaS Prelaunch Pages",
-  line = "Have Never Been Easier",
-  ctaText,
-  footerLink,
-  companyName = "Build Lean SaaS",
-  colorScheme = "blue",
-}) {
+export default function Home({ landingPages, about, tawkTo, stripe, ...props }) {
+  // HOOK UTILITIES
+  // ---------------
+  //
+  // ---------------
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { showAlert } = useAlerts();
+
+  // STYLES
+  // ---------------
+  //
+  // ---------------
+
   const isDesktop = useBreakpointValue({ base: false, lg: true });
-
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    (async () => {
-      setProducts(
-        await axios.get("/api/stripe/products", {
-          params: { ids: getAllProductKeys() },
-        })
-      );
-      setLoadingProducts(false);
-    })();
-  }, []);
-
   const headingSize = useBreakpointValue({ base: "lg", sm: "xl", md: "2xl", lg: "3xl" });
   const headingHighlightSize = useBreakpointValue({ base: "lg", sm: "2xl", md: "3xl", lg: "4xl" });
   const headlingHighlightLineHeight = useBreakpointValue({ base: "2rem", sm: "3rem", md: "4.5rem" });
@@ -71,8 +87,79 @@ export default function Home({
   const descriptionFontSize = useBreakpointValue({ base: "xl", md: "2xl" });
   const ctaMarginBottom = useBreakpointValue({ base: 2, md: 3 });
   const navbarHeadingSize = useBreakpointValue({ base: "md" });
+  const ctaButtonSize = useBreakpointValue({ base: "md", md: "lg" });
 
-  if (loadingProducts) {
+  const bodyText = {
+    fontSize: "xl",
+    mt: "4",
+  };
+
+  // STATE & PROPS
+  // ---------------
+  //
+  // ---------------
+
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [products, setProduct] = useState([]);
+
+  const {
+    // strings
+    hook = "SaaS Prelaunch Pages",
+    line = "Have Never Been Easier",
+    footerLink = "https://buildleansaas.com",
+    companyName = "Build Lean SaaS",
+    colorScheme = "blue",
+    // sanity blocks
+    ctaText,
+    promo,
+    fomo,
+  } = landingPages[0]; // TODO: automatically handle A/B testing
+
+  const { stripeTestProductId, stripeLiveProductId } = stripe;
+  const { name, description, images } = products?.data ?? {};
+
+  // ON LOAD
+  // ---------------
+  //
+  // ---------------
+
+  useEffect(() => {
+    (async () => {
+      if (!loadingProducts) {
+        try {
+          setLoadingProducts(true);
+          if (firstLoad) {
+            setFirstLoad(false);
+          }
+          setProduct(
+            await axios.get(
+              `/api/stripe/products/${
+                process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId
+              }`
+            )
+          );
+          setLoadingProducts(false);
+        } catch (err) {
+          console.error(err);
+          showAlert({ title: err.message });
+        }
+      }
+    })();
+
+    if (process.env.NODE_ENV === "production" && !isEmpty(tawkTo)) {
+      new TawkTo(tawkTo.accountID, tawkTo.chatID).onStatusChange((status) =>
+        console.log("tawk initiated, status: ", status)
+      );
+    }
+  }, []);
+
+  // LOADING STATE
+  // ---------------
+  //
+  // ---------------
+
+  if (firstLoad || loadingProducts) {
     return (
       <Flex align="center" justify="center" height="100vh" width="100vw">
         <Spinner size="xl" />
@@ -80,7 +167,14 @@ export default function Home({
     );
   }
 
-  const { prices, name, description, images } = products?.data?.[0] ?? {};
+  // DEVELOPMENT HELP
+  // ---------------
+  //
+  // ---------------
+
+  if (process.env.NODE_ENV === "development") {
+    console.log(props);
+  }
 
   return (
     <>
@@ -103,7 +197,12 @@ export default function Home({
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
           <HStack>
-            <Image src={images[0]} height={42} width={42} alt={`${name} Logo`} />
+            <Image
+              src={images?.[0] ?? "https://placekitten.com/42/42"}
+              height={42}
+              width={42}
+              alt={`${name} Logo`}
+            />
             <VStack>
               <Heading size={navbarHeadingSize} fontWeight={400} ml={2}>
                 {name}
@@ -112,11 +211,12 @@ export default function Home({
           </HStack>
           {isDesktop && (
             <ButtonGroup ml="auto" variant="ghost-on-accent" spacing="1">
-              <Button fontWeight={300} _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}>
+              <Button
+                fontWeight={300}
+                _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
+                onClick={onOpen}
+              >
                 About
-              </Button>
-              <Button fontWeight={300} _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}>
-                Roadmap
               </Button>
               <Button fontWeight={300} _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}>
                 Subscribe
@@ -146,11 +246,17 @@ export default function Home({
           <Text color="muted" textAlign="center" fontSize={descriptionFontSize} my={{ base: 4, md: 8 }}>
             {description}
           </Text>
-          <Button colorScheme={colorScheme} size="lg" width="100%" maxW="320" mt={8} mb={ctaMarginBottom}>
-            Just <chakra.strike mx={1}>$50</chakra.strike> $10/year!
+          <Button colorScheme={colorScheme} size={ctaButtonSize} mt={8} mb={ctaMarginBottom}>
+            {!ctaText ? (
+              <>
+                Early Adopter Access for <strike>$50</strike> $5/year!
+              </>
+            ) : (
+              <Block value={ctaText} />
+            )}
           </Button>
           <Text textAlign="center" mt={2}>
-            {ctaText ?? (
+            {!promo ? (
               <>
                 Unlock Lifetime Access 80% off, Code{" "}
                 <chakra.pre display="inline" background="yellow.200" py={1} px={2}>
@@ -158,15 +264,23 @@ export default function Home({
                 </chakra.pre>{" "}
                 automatically applied at checkout!
               </>
+            ) : (
+              <Block value={promo} />
             )}
           </Text>
           <Text textAlign="center" fontSize={14} mt={2} color="gray.500">
-            Only available to the <u>next 100 users</u>!
+            {!fomo ? (
+              <>
+                This <u>code is limited</u> to the <u>first 100 users</u>!
+              </>
+            ) : (
+              <Block value={fomo} />
+            )}
           </Text>
         </Flex>
         <chakra.footer mt={footerMarginTop}>
           <Link
-            href={footerLink ?? "https://buildleansaas.com"}
+            href={footerLink}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -182,7 +296,29 @@ export default function Home({
             </span>
           </Link>
         </chakra.footer>
+        <Dialog {...{ onClose, isOpen, title: `About ${name}` }}>
+          <Box mt={12}>
+            <Text {...{ ...bodyText }}>
+              <chakra.span bg="yellow">
+                <strong>Last Updated</strong>: {format(new Date(), "MMMM Do, yyyy")}
+              </chakra.span>
+            </Text>
+            <Text {...{ ...bodyText }}>
+              <strong>From</strong>:{" "}
+              <Link href="https://twitter.com/buildleansaas" target="_blank" rel="noopener">
+                @adubs
+              </Link>
+            </Text>
+            <Block value={about} />
+          </Box>
+        </Dialog>
       </Box>
     </>
   );
 }
+
+export const getServerSideProps = async ({ req }) => ({
+  props: {
+    ...(await getProjectConfig(getDomain(req))),
+  },
+});
