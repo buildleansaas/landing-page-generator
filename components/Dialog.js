@@ -11,8 +11,8 @@ import {
   Button,
 } from "@chakra-ui/react";
 
-const Dialog = ({ onSave, onClose, isOpen, title, children, saveButtonText = "Save" }) => (
-  <Modal isOpen={isOpen} onClose={onClose} isCentered size="full">
+const Dialog = ({ onSave, onClose, isOpen, title, children, saveButtonText = "Save", ...props }) => (
+  <Modal isOpen={isOpen} onClose={onClose} size="full" {...props}>
     <ModalOverlay />
     <ModalContent>
       <ModalHeader>{title}</ModalHeader>

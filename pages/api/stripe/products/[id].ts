@@ -1,16 +1,12 @@
 import { stripe } from "lib/api/stripe";
 import { isEmpty } from "lodash";
 
+// https://stripe.com/docs/api/products?lang=node
 const handler = async (req, res) => {
   const { id } = req.query;
-  // https://stripe.com/docs/api/products?lang=node
-
-  console.log("Getting product from stripe for ID ", id);
 
   try {
     const product = await stripe.products.retrieve(String(id));
-
-    console.log("product retrieved ", product);
 
     if (isEmpty(product)) {
       return res.status(406).send({ message: "Product not found" });

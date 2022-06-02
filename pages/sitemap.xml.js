@@ -1,5 +1,3 @@
-import { allLinks } from "components/Layout/Layout";
-
 const Sitemap = () => {
   return <></>;
 };
@@ -8,17 +6,13 @@ export const getServerSideProps = async ({ req, res }) => {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>';
   xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
-  const SITE_ROOT = config.url;
-
-  const routes = [];
-
-  allLinks.map(({ to }) =>
-    routes.push({
-      path: `${to.substring(1)}`,
+  const routes = [
+    {
+      path: `/`,
       changefreq: "daily",
       priority: 1,
-    })
-  );
+    },
+  ];
 
   // const Posts = await sanity.fetch(`
   //     *[_type == 'post']{

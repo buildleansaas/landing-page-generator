@@ -3,11 +3,11 @@
 //
 // ---------------
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Head from "next/head";
 import { isEmpty } from "lodash";
 import Image from "next/image";
-import axios from "axios";
+import { useQuery } from "react-query";
 import {
   Box,
   Button,
@@ -16,7 +16,6 @@ import {
   Heading,
   HStack,
   IconButton,
-  ButtonGroup,
   Link,
   Spinner,
   Text,
@@ -24,14 +23,13 @@ import {
   VStack,
   useDisclosure,
 } from "@chakra-ui/react";
-import { FiMenu } from "react-icons/fi";
+import { FcAbout } from "react-icons/fc";
+import ResponsiveEmbed from "react-responsive-embed";
 
 // BUSINESS LOGIC LIBRARIES
 // ---------------
 //
 // ---------------
-
-import { format } from "date-fns";
 import TawkTo from "tawkto-react";
 
 // PROJECT CONFIGURATION
@@ -39,6 +37,7 @@ import TawkTo from "tawkto-react";
 //
 // ---------------
 
+import { imageBuilder } from "lib/sanity";
 import { getProjectConfig } from "lib/sanity/config";
 import { getDomain } from "utils";
 import useAlerts from "hooks/useAlerts";
@@ -49,22 +48,49 @@ import useAlerts from "hooks/useAlerts";
 // ---------------
 
 import Dialog from "components/Dialog";
-import Block from "components/Block";
+import { TextBlock } from "components/Block";
 
 const StripSubscriptionPortalButton = () => {};
 
-// LOCAL CONSTANTS
+// LOCAL HELPERS
 // ---------------
 //
 // ---------------
-export const THIS_ENV = process.env.NODE_ENV === "development" ? "test" : "prod";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const formatDate = (date) => MONTHS[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
 
 // LANGING PAGE RENDER
 // ---------------
 //
 // ---------------
 
-export default function Home({ landingPages, about, tawkTo, stripe, ...props }) {
+export default function Home({
+  landingPages,
+  about,
+  tawkTo,
+  stripe,
+  footerLink,
+  companyName,
+  companyLogo,
+  founderLink,
+  founderName,
+  ...props
+}) {
   // HOOK UTILITIES
   // ---------------
   //
@@ -99,17 +125,28 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
   //
   // ---------------
 
-  const [firstLoad, setFirstLoad] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [products, setProduct] = useState([]);
+  const {
+    isLoading: isLoadingProduct,
+    error: productError,
+    data: product,
+  } = useQuery("product", () =>
+    fetch(
+      `/api/stripe/products/${
+        process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId
+      }`
+    ).then((res) => res.json())
+  );
+
+  if (productError) {
+    showAlert({ title: productError });
+  }
 
   const {
     // strings
     hook = "SaaS Prelaunch Pages",
     line = "Have Never Been Easier",
-    footerLink = "https://buildleansaas.com",
-    companyName = "Build Lean SaaS",
     colorScheme = "blue",
+    youtube,
     // sanity blocks
     ctaText,
     promo,
@@ -117,7 +154,7 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
   } = landingPages[0]; // TODO: automatically handle A/B testing
 
   const { stripeTestProductId, stripeLiveProductId } = stripe;
-  const { name, description, images } = products?.data ?? {};
+  const { name, description, images } = product ?? {};
 
   // ON LOAD
   // ---------------
@@ -125,28 +162,6 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
   // ---------------
 
   useEffect(() => {
-    (async () => {
-      if (!loadingProducts) {
-        try {
-          setLoadingProducts(true);
-          if (firstLoad) {
-            setFirstLoad(false);
-          }
-          setProduct(
-            await axios.get(
-              `/api/stripe/products/${
-                process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId
-              }`
-            )
-          );
-          setLoadingProducts(false);
-        } catch (err) {
-          console.error(err);
-          showAlert({ title: err.message });
-        }
-      }
-    })();
-
     if (process.env.NODE_ENV === "production" && !isEmpty(tawkTo)) {
       new TawkTo(tawkTo.accountID, tawkTo.chatID).onStatusChange((status) =>
         console.log("tawk initiated, status: ", status)
@@ -159,7 +174,7 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
   //
   // ---------------
 
-  if (firstLoad || loadingProducts) {
+  if (isLoadingProduct) {
     return (
       <Flex align="center" justify="center" height="100vh" width="100vw">
         <Spinner size="xl" />
@@ -173,7 +188,7 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
   // ---------------
 
   if (process.env.NODE_ENV === "development") {
-    console.log(props);
+    // console.log(props);
   }
 
   return (
@@ -209,29 +224,30 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
               </Heading>
             </VStack>
           </HStack>
-          {isDesktop && (
-            <ButtonGroup ml="auto" variant="ghost-on-accent" spacing="1">
-              <Button
-                fontWeight={300}
-                _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
-                onClick={onOpen}
-              >
-                About
-              </Button>
-              <Button fontWeight={300} _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}>
-                Subscribe
-              </Button>
-            </ButtonGroup>
-          )}
-          {!isDesktop && (
+          {isDesktop ? (
+            <Button
+              variant="ghost"
+              leftIcon={<FcAbout />}
+              fontWeight={300}
+              _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
+              onClick={onOpen}
+            >
+              About
+            </Button>
+          ) : (
             <IconButton
-              variant="ghost-on-accent"
-              icon={<FiMenu fontSize="1.5rem" fontWeight={300} />}
-              aria-label="Open Menu"
+              variant="ghost"
+              icon={<FcAbout />}
+              fontSize={24}
+              _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
+              onClick={onOpen}
             />
           )}
         </Box>
         <Flex flex="1" flexDir="column" alignItems="center" justify="center">
+          {!!youtube && (
+            <ResponsiveEmbed src={`https://www.youtube.com/embed/${youtube}?controls=0`} allowFullScreen />
+          )}
           <Heading size={headingSize} lineHeight={headlingLineHeight} textAlign="center">
             {hook}
           </Heading>
@@ -246,37 +262,11 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
           <Text color="muted" textAlign="center" fontSize={descriptionFontSize} my={{ base: 4, md: 8 }}>
             {description}
           </Text>
-          <Button colorScheme={colorScheme} size={ctaButtonSize} mt={8} mb={ctaMarginBottom}>
-            {!ctaText ? (
-              <>
-                Early Adopter Access for <strike>$50</strike> $5/year!
-              </>
-            ) : (
-              <Block value={ctaText} />
-            )}
+          <Button colorScheme={colorScheme} mt={8} mb={ctaMarginBottom}>
+            <TextBlock value={ctaText} />
           </Button>
-          <Text textAlign="center" mt={2}>
-            {!promo ? (
-              <>
-                Unlock Lifetime Access 80% off, Code{" "}
-                <chakra.pre display="inline" background="yellow.200" py={1} px={2}>
-                  UAJL6i37
-                </chakra.pre>{" "}
-                automatically applied at checkout!
-              </>
-            ) : (
-              <Block value={promo} />
-            )}
-          </Text>
-          <Text textAlign="center" fontSize={14} mt={2} color="gray.500">
-            {!fomo ? (
-              <>
-                This <u>code is limited</u> to the <u>first 100 users</u>!
-              </>
-            ) : (
-              <Block value={fomo} />
-            )}
-          </Text>
+          <TextBlock value={promo} textAlign="center" fontSize={14} mt={2} />
+          <TextBlock value={fomo} textAlign="center" fontSize={14} mt={2} color="gray.500" />
         </Flex>
         <chakra.footer mt={footerMarginTop}>
           <Link
@@ -292,25 +282,35 @@ export default function Home({ landingPages, about, tawkTo, stripe, ...props }) 
           >
             Powered by {companyName}
             <span style={{ marginLeft: "0.5rem" }}>
-              <Image src="/bls.png" alt={`${companyName} Logo`} width={32} height={32} />
+              <Image
+                src={imageBuilder(companyLogo).width(32).url()}
+                alt={`${companyName} Logo`}
+                width={32}
+                height={32}
+              />
             </span>
           </Link>
         </chakra.footer>
-        <Dialog {...{ onClose, isOpen, title: `About ${name}` }}>
-          <Box mt={12}>
-            <Text {...{ ...bodyText }}>
-              <chakra.span bg="yellow">
-                <strong>Last Updated</strong>: {format(new Date(), "MMMM Do, yyyy")}
-              </chakra.span>
-            </Text>
-            <Text {...{ ...bodyText }}>
-              <strong>From</strong>:{" "}
-              <Link href="https://twitter.com/buildleansaas" target="_blank" rel="noopener">
-                @adubs
-              </Link>
-            </Text>
-            <Block value={about} />
-          </Box>
+        <Dialog
+          {...{
+            onClose,
+            isOpen,
+            title: `About ${name}`,
+            borderRadius: 0,
+          }}
+        >
+          <Text {...{ ...bodyText }}>
+            <chakra.span bg="yellow">
+              <strong>Last Updated</strong>: {formatDate(new Date())}
+            </chakra.span>
+          </Text>
+          <Text {...{ ...bodyText }}>
+            <strong>From</strong>:{" "}
+            <Link href={founderLink} target="_blank" rel="noopener">
+              {founderName}
+            </Link>
+          </Text>
+          <TextBlock value={about} />
         </Dialog>
       </Box>
     </>
