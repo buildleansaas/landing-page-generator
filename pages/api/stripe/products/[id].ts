@@ -15,6 +15,7 @@ const handler = async (req, res) => {
     const { data: prices } = await stripe.prices.list({
       limit: 100,
       product: id,
+      active: true,
     });
 
     if (isEmpty(prices)) {
