@@ -162,7 +162,6 @@ export default function Home({
     ctaText,
     promo,
     fomo,
-    claimRewardText,
     revisionName, // TODO: integrate with logging
   } = landingPages[0]; // TODO: automatically handle A/B testing
 
@@ -367,7 +366,7 @@ export default function Home({
             {purchased && scid && (
               <NextLink href={`/claim?${scid}`} passHref>
                 <Button leftIcon="⭐️" colorScheme="blue">
-                  {claimRewardText}
+                  Get Access Now!
                 </Button>
               </NextLink>
             )}
