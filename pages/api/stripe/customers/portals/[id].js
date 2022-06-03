@@ -18,7 +18,7 @@ const handler = async (req, res) => {
 
       const {
         stripe: { stripeTestProductId, stripeLiveProductId },
-      } = await getProjectConfig(getDomain(req));
+      } = await getProjectConfig(await getDomain(req));
 
       const productResponse = await fetch(
         `${req.headers.origin}/api/stripe/products/${

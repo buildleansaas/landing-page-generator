@@ -451,6 +451,6 @@ export default function Home({
 
 export const getServerSideProps = async ({ req }) => ({
   props: {
-    ...(await getProjectConfig(getDomain(req))),
+    ...(await getProjectConfig(await getDomain(req))),
   },
 });

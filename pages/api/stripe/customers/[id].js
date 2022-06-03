@@ -1,5 +1,4 @@
 import { stripe } from "lib/api/stripe";
-import { isEmpty, isEqual } from "lodash";
 
 const handler = async (req, res) => {
   // https://stripe.com/docs/api/products?lang=node

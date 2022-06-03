@@ -2,7 +2,7 @@ import { getProjectConfig } from "lib/sanity/config";
 import { getDomain } from "utils";
 
 export async function getServerSideProps({ req }) {
-  const config = await getProjectConfig(getDomain(req));
+  const config = await getProjectConfig(await getDomain(req));
   if (config.rewardLink) {
     return {
       redirect: {
