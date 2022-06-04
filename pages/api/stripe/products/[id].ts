@@ -1,5 +1,5 @@
 import { stripe } from "lib/api/stripe";
-import { isEmpty } from "lodash";
+import { isEmpty } from "utils";
 
 // https://stripe.com/docs/api/products?lang=node
 const handler = async (req, res) => {

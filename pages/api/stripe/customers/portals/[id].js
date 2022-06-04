@@ -18,6 +18,7 @@ const handler = async (req, res) => {
 
       const {
         stripe: { stripeTestProductId, stripeLiveProductId },
+        projectName,
       } = await getProjectConfig(await getDomain(req));
 
       const productResponse = await fetch(
@@ -30,7 +31,7 @@ const handler = async (req, res) => {
 
       const defaultConfig = {
         business_profile: {
-          headline: `Manage your Account with ${companyName}`,
+          headline: `Manage your Account with ${projectName}`,
           privacy_policy_url: `${req.headers.origin}/policy/privacy`, // TODO: create Sanity Integration
           terms_of_service_url: `${req.headers.origin}/policy/terms`, // TODO: create Sanity Integration
         },

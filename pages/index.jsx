@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import NextLink from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { isEmpty } from "lodash";
+import { isEmpty } from "utils";
 import Image from "next/image";
 import { useQuery } from "react-query";
 import {
