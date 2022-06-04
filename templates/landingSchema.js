@@ -1,0 +1,228 @@
+export default {
+  title: "Projects",
+  name: "projects",
+  type: "document",
+  fieldsets: [
+    {
+      name: "integrations",
+      title: "Integrations",
+      description:
+        "Essential integrations like Stripe are found here, as well as optional ones such as Google Analytics, TawkTo, etc.",
+      options: { collapsible: true },
+    },
+    {
+      name: "shared",
+      title: "Shared Assets",
+      description: "These assets are shared amongst all landing pages.",
+      options: { collapsible: true },
+    },
+  ],
+  fields: [
+    {
+      title: "Project Name",
+      name: "projectName",
+      type: "string",
+      require: true,
+    },
+    {
+      title: "Domain",
+      description: "no http/https before, just 'domainname.com'",
+      name: "domain",
+      type: "string",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "footerLink",
+      title: "Footer Link",
+      type: "url",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "rewardLink",
+      title: "Access Link",
+      type: "url",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "companyName",
+      title: "Company Name",
+      description: "What is the name of the parent company that operates this SaaS?",
+      type: "string",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "companyLogo",
+      title: "Company Logo",
+      description: "The logo of the parent company that operates this SaaS.",
+      type: "image",
+      require: true,
+      fieldset: "shared",
+      options: {
+        hotspot: true,
+      },
+    },
+    {
+      title: "Project Status",
+      name: "status",
+      type: "string",
+      fieldset: "shared",
+      require: true,
+      options: {
+        list: [
+          "Pre-Launch",
+          "In Development",
+          "Alpha Release",
+          "Beta Release",
+          "Live Release",
+          "Sunset",
+          "Archive",
+        ],
+      },
+    },
+    {
+      name: "founderName",
+      title: "Founder Name",
+      description: "Who is/are the person or peoples that consider themselves founder(s)?",
+      type: "string",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "founderLink",
+      title: "Founder Link",
+      description: "How can the public get in touch with the founder or follow them (social media)?",
+      type: "string",
+      fieldset: "shared",
+      require: true,
+    },
+    {
+      name: "stripe",
+      title: "Stripe",
+      description: "Product, coupon and other IDs used by Stripe",
+      fieldset: "integrations",
+      type: "document",
+      options: { collapsible: true },
+      fields: [
+        {
+          name: "stripeTestProductId",
+          title: "Stripe TEST Product ID",
+          type: "string",
+          require: true,
+        },
+        {
+          name: "stripeLiveProductId",
+          title: "Stripe LIVE Product ID",
+          type: "string",
+          require: true,
+        },
+        {
+          name: "activeStripeCouponCode",
+          title: "Active Stripe Coupon Code",
+          type: "string",
+          require: true,
+        },
+      ],
+    },
+    {
+      name: "tawkTo",
+      title: "TawkTo",
+      description:
+        "Landing Page Chat Plugin ids can be found in your tawk.to dashboard, like https://tawk.to/chat/accountID/chatID",
+      fieldset: "integrations",
+      type: "document",
+      options: { collapsible: true },
+      fields: [
+        {
+          name: "accountID",
+          title: "Account ID",
+          type: "string",
+          require: true,
+        },
+        {
+          name: "chatID",
+          title: "Chat ID",
+          type: "string",
+          require: true,
+        },
+      ],
+    },
+    {
+      title: "Landing Pages",
+      name: "landingPages",
+      type: "array",
+      of: [
+        {
+          name: "revision",
+          title: "Revisions",
+          type: "document",
+          fields: [
+            {
+              name: "name",
+              title: "Revision Name",
+              type: "string",
+              required: true,
+            },
+            {
+              name: "active",
+              title: "Active",
+              description: "Is this landing page actively part of split testing?",
+              type: "boolean",
+            },
+            {
+              name: "youtube",
+              title: "Youtube Embed ID",
+              description: "https://www.youtube.com/watch?v=liJVSwOiiwg",
+              type: "string",
+            },
+            {
+              name: "hook",
+              title: "Hook",
+              type: "string",
+              required: true,
+            },
+            {
+              name: "line",
+              title: "Line",
+              type: "string",
+              required: true,
+            },
+            {
+              name: "ctaText",
+              title: "Call To Action Text",
+              type: "blockContent",
+              required: true,
+            },
+            {
+              name: "promo",
+              title: "Promotion",
+              type: "blockContent",
+            },
+            {
+              name: "fomo",
+              title: "Fomo",
+              type: "blockContent",
+            },
+            {
+              title: "Color Scheme",
+              name: "colorScheme",
+              type: "string",
+              required: true,
+              options: {
+                list: ["red", "blue", "green", "purple", "gray", "orange", "teal", "cyan", "pink"],
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      title: "About",
+      name: "about",
+      type: "blockContent",
+    },
+  ],
+};
