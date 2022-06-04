@@ -153,6 +153,8 @@ export default function Home({
   }
 
   const {
+    revisionProductName,
+    revisionProductDescription,
     // strings
     hook = "SaaS Prelaunch Pages",
     line = "Have Never Been Easier",
@@ -162,12 +164,24 @@ export default function Home({
     ctaText,
     promo,
     fomo,
-    revisionName, // TODO: integrate with logging
-  } = landingPages[0]; // TODO: automatically handle A/B testing
+  } = landingPages[0]; // TODO: automatically handle A/B testing https://www.plasmic.app/blog/nextjs-ab-testing
 
-  const { stripeTestProductId, stripeLiveProductId, activeStripeCouponCode } = stripe;
-  const { name, description, images, id: productId, prices } = product ?? {};
-  const price = prices?.[0];
+  const {
+    stripeTestProductId,
+    stripeLiveProductId,
+    activeStripeCouponCode,
+    sharedProductName,
+    sharedProductDescription,
+    sharedProductLogo,
+  } = stripe;
+  const {
+    name: stripeProductName,
+    description: stripeProductDescription,
+    images,
+    id: productId,
+    prices,
+  } = product ?? {};
+  const price = prices?.[0]; // TODO: expand price selection options
 
   const mode = price?.type === "one_time" ? "payment" : "subscription";
 
@@ -285,10 +299,12 @@ export default function Home({
         </Box>
       )}
       <Head>
-        <title>{name}</title>
-        <meta name="description" content={description} />
-        {/* TODO: make favicon */}
-        <link rel="icon" href="/favicon.ico" />
+        <title>{revisionProductName ?? sharedProductName ?? stripeProductName}</title>
+        <meta
+          name="description"
+          content={revisionProductDescription ?? sharedProductDescription ?? stripeProductDescription}
+        />
+        <link rel="icon" href="/favicon.ico" /> {/* TODO: make favicon */}
       </Head>
       <Box
         display="flex"
@@ -304,21 +320,25 @@ export default function Home({
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
           <HStack>
             <Image
-              src={images?.[0] ?? "https://placekitten.com/42/42"}
-              height={42}
-              width={42}
-              alt={`${name} Logo`}
+              src={
+                sharedProductLogo
+                  ? imageBuilder(sharedProductLogo).height(69).width(69).url()
+                  : images?.[0] ?? "https://placekitten.com/69/69"
+              }
+              height={69}
+              width={69}
+              alt={`${revisionProductName ?? sharedProductName ?? stripeProductName} Logo`}
             />
             <VStack>
               <Heading size={navbarHeadingSize} fontWeight={400} ml={2}>
-                {name}
+                {revisionProductName ?? sharedProductName ?? stripeProductName}
               </Heading>
             </VStack>
           </HStack>
           {isDesktop ? (
             <Button
               variant="ghost"
-              leftIcon={<FcAbout />}
+              leftIcon={<>ℹ️</>}
               fontWeight={300}
               _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
               onClick={onOpen}
@@ -328,7 +348,7 @@ export default function Home({
           ) : (
             <IconButton
               variant="ghost"
-              icon={<FcAbout />}
+              icon={<>ℹ️</>}
               fontSize={24}
               _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
               onClick={onOpen}
@@ -343,7 +363,7 @@ export default function Home({
 
           {/* HOOK */}
           <Heading size={headingSize} lineHeight={headlingLineHeight} textAlign="center">
-            {hook}
+            {hook} {/* TODO: make hook array, if multi length, Typewriter Effect */}
           </Heading>
 
           {/* LINE */}
@@ -353,12 +373,12 @@ export default function Home({
             lineHeight={headlingHighlightLineHeight}
             textAlign="center"
           >
-            {line}
+            {line} {/* TODO: make line array, if multi length, Typewriter Effect */}
           </Heading>
 
           {/* SINKER */}
           <Text color="muted" textAlign="center" fontSize={descriptionFontSize} my={{ base: 4, md: 8 }}>
-            {description}
+            {revisionProductDescription ?? sharedProductDescription ?? stripeProductDescription}
           </Text>
 
           {/* BITE */}
@@ -426,7 +446,7 @@ export default function Home({
           {...{
             onClose,
             isOpen,
-            title: `About ${name}`,
+            title: `About ${revisionProductName ?? sharedProductName ?? stripeProductName}`,
             borderRadius: 0,
           }}
         >

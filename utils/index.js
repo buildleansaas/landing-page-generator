@@ -4,6 +4,7 @@ export const getDomain = async (req) => {
   const domains = await getProjectDomains();
 
   if (!domains.includes(req.headers.host) || req.headers.host.includes("localhost")) {
+    console.log(domains, req.headers.host);
     return process.env.TEST_DOMAIN;
   } else {
     return req.headers.host.replace("https://", "").replace("http://", "").replace("www.", "");
