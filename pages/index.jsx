@@ -1,7 +1,4 @@
 // REACT + UTIL LIBRARIES
-// ---------------
-//
-// ---------------
 
 import { useEffect } from "react";
 import NextLink from "next/link";
@@ -26,61 +23,26 @@ import {
   useDisclosure,
   ButtonGroup,
 } from "@chakra-ui/react";
-import { FcAbout } from "react-icons/fc";
 import ResponsiveEmbed from "react-responsive-embed";
 
 // BUSINESS LOGIC LIBRARIES
-// ---------------
-//
-// ---------------
+
 import TawkTo from "tawkto-react";
 
 // PROJECT CONFIGURATION
-// ---------------
-//
-// ---------------
 
 import { imageBuilder } from "lib/sanity";
 import { getProjectConfig } from "lib/sanity/config";
-import { getDomain } from "utils";
+import { getDomain, formatDate } from "utils";
 import useAlerts from "hooks/useAlerts";
 import useStorage from "hooks/useStorage";
 
 // COMPONENTS
-// ---------------
-//
-// ---------------
 
 import Dialog from "components/Dialog";
 import { TextBlock } from "components/Block";
 
-// LOCAL HELPERS
-// ---------------
-// - stripe customer constants
-// - date formatter utilities
-// ---------------
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-const formatDate = (date) => MONTHS[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-
 // LANGING PAGE RENDER
-// ---------------
-//
-// ---------------
 
 export default function Home({
   landingPages,
@@ -246,10 +208,16 @@ export default function Home({
   }, []);
 
   useEffect(() => {
-    if (!isEmpty(stripeCustomer) && !stripeCustomer?.subscriptions.length && purchased) {
+    if (!isEmpty(stripeCustomer) && !stripeCustomer?.subscriptions?.length && purchased) {
       setPurchased(false);
     }
   }, [stripeCustomer]);
+
+  const getProductName = () => {
+    if (!!revisionProductName) return revisionProductName;
+    if (!!sharedProductName) return sharedProductName;
+    if (!!stripeProductName) return stripeProductName;
+  };
 
   // LOADING STATE
   // ---------------
@@ -286,9 +254,9 @@ export default function Home({
       {process.env.NODE_ENV === "development" && (
         <Box
           width="100%"
-          p={2}
+          p={1}
           background="blue.500"
-          {...{ display: "flex", align: "center", justify: "around" }}
+          {...{ display: "flex", align: "center", justify: "between" }}
         >
           <Text color="white" mr="auto">
             NODE_ENV: {process.env.NODE_ENV}
@@ -299,7 +267,7 @@ export default function Home({
         </Box>
       )}
       <Head>
-        <title>{revisionProductName ?? sharedProductName ?? stripeProductName}</title>
+        <title>{getProductName()}</title>
         <meta
           name="description"
           content={revisionProductDescription ?? sharedProductDescription ?? stripeProductDescription}
@@ -327,11 +295,11 @@ export default function Home({
               }
               height={69}
               width={69}
-              alt={`${revisionProductName ?? sharedProductName ?? stripeProductName} Logo`}
+              alt={`${getProductName()} Logo`}
             />
             <VStack>
               <Heading size={navbarHeadingSize} fontWeight={400} ml={2}>
-                {revisionProductName ?? sharedProductName ?? stripeProductName}
+                {getProductName()}
               </Heading>
             </VStack>
           </HStack>
@@ -339,11 +307,11 @@ export default function Home({
             <Button
               variant="ghost"
               leftIcon={<>ℹ️</>}
-              fontWeight={300}
+              fontWeight={400}
               _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
               onClick={onOpen}
             >
-              About
+              Learn More
             </Button>
           ) : (
             <IconButton
@@ -446,7 +414,7 @@ export default function Home({
           {...{
             onClose,
             isOpen,
-            title: `About ${revisionProductName ?? sharedProductName ?? stripeProductName}`,
+            title: `About ${getProductName()}`,
             borderRadius: 0,
           }}
         >
@@ -468,8 +436,12 @@ export default function Home({
   );
 }
 
-export const getServerSideProps = async ({ req }) => ({
-  props: {
-    ...(await getProjectConfig(await getDomain(req))),
-  },
-});
+export const getServerSideProps = async ({ req, res }) => {
+  res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
+
+  return {
+    props: {
+      ...(await getProjectConfig(await getDomain(req))),
+    },
+  };
+};

@@ -16,6 +16,7 @@ export default function useStorage(key: string, initialValue: any) {
       // Parse stored json or if none return initialValue
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
+      console.error;
       showAlert({ title: "error", description: error.message, status: "error" });
       return initialValue;
     }
@@ -34,7 +35,7 @@ export default function useStorage(key: string, initialValue: any) {
       }
     } catch (error) {
       showAlert({ title: "error", description: error.message, status: "error" });
-      console.log(error);
+      console.error(error);
     }
   };
   return [storedValue, setValue];
