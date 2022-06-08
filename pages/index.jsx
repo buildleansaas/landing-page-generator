@@ -6,7 +6,6 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { isEmpty } from "utils";
 import Image from "next/image";
-import { useQuery } from "react-query";
 import {
   Box,
   Button,
@@ -37,6 +36,8 @@ import { getProjectConfig } from "lib/sanity/config";
 import { getDomain, formatDate } from "utils";
 import useAlerts from "hooks/useAlerts";
 import useStorage from "hooks/useStorage";
+import useStripeProduct from "hooks/useStripeProduct";
+import useStripeCustomer from "hooks/useStripeCustomer";
 
 // COMPONENTS
 // ---------------
@@ -44,73 +45,16 @@ import useStorage from "hooks/useStorage";
 import Dialog from "components/Dialog";
 import { TextBlock } from "components/Block";
 
-// HOOKS
-// ---------------
-
-const useStripeProduct = ({ productId }) => {
-  const { isLoading, error, data } = useQuery(
-    "product",
-    () => fetch(`/api/stripe/products/${productId}`).then((res) => res.json()),
-    { enabled: !!productId }
-  );
-
-  if (error) {
-    showAlert({
-      status: "error",
-      title: "Stripe Product Error",
-      description: error.message,
-    });
-  }
-
-  return {
-    isLoadingProduct: isLoading,
-    product: data,
-  };
-};
-
-const useStripeCustomer = ({ scid }) => {
-  const {
-    isLoading: isLoadingStripeCustomer,
-    error: stripeCustomerError,
-    data: stripeCustomer,
-  } = useQuery("stripeCustomer", () => fetch(`/api/stripe/customers/${scid}`).then((res) => res.json()), {
-    enabled: !!scid,
-  });
-
-  if (stripeCustomerError) {
-    showAlert({
-      status: "error",
-      title: "Stripe Authorization Error",
-      description: stripeCustomerError.message,
-    });
-  }
-
-  return {
-    isLoadingStripeCustomer,
-    stripeCustomer,
-  };
-};
-
 // LANGING PAGE RENDER
 // ---------------
 
-export default function Home({ siteConfig, error }) {
+export default function Home({ siteConfig }) {
   // HOOK UTILITIES
   // ---------------
 
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { showAlert } = useAlerts();
-
-  // SERVER ERROR ALERT
-
-  if (error) {
-    showAlert({
-      status: "error",
-      title: "Server Side Rendering Error",
-      description: error.message,
-    });
-  }
 
   // DESTRUCTURING
   // ---------------
@@ -225,7 +169,6 @@ export default function Home({ siteConfig, error }) {
   }, []);
 
   useEffect(() => {
-    console.log(stripeCustomer);
     if (!isEmpty(stripeCustomer) && !stripeCustomer?.subscriptions?.length && purchased) {
       setPurchased(false);
     }
@@ -442,16 +385,11 @@ export default function Home({ siteConfig, error }) {
 export const getServerSideProps = async ({ req, res }) => {
   res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
 
-  try {
-    const siteConfig = await getProjectConfig(await getDomain(req));
+  const siteConfig = await getProjectConfig(await getDomain(req));
 
-    return {
-      props: {
-        siteConfig,
-      },
-    };
-  } catch (error) {
-    console.error(error);
-    return { props: { error } };
-  }
+  return {
+    props: {
+      siteConfig,
+    },
+  };
 };
