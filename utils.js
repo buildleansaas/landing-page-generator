@@ -1,5 +1,19 @@
 import { getProjectDomains } from "lib/sanity/config";
-import { MONTHS } from "constants";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 // TODO: hacky rewrite this please.
 const trimHost = (host) => {
