@@ -19,7 +19,6 @@ import {
   Spinner,
   Text,
   useBreakpointValue,
-  useDisclosure,
 } from "@chakra-ui/react";
 import ResponsiveEmbed from "react-responsive-embed";
 
@@ -43,7 +42,7 @@ import useStripeCustomer from "hooks/useStripeCustomer";
 // ---------------
 
 import Dialog from "components/Dialog";
-import { TextBlock } from "components/Block";
+import Block from "components/Block";
 
 // LANGING PAGE RENDER
 // ---------------
@@ -94,7 +93,7 @@ export default function Home({ siteConfig }) {
   const headingHighlightSize = useBreakpointValue({ base: "lg", sm: "2xl", md: "3xl", lg: "4xl" });
   const headlingHighlightLineHeight = useBreakpointValue({ base: "2rem", sm: "3rem", md: "4.5rem" });
   const headlingLineHeight = useBreakpointValue({ base: "1.75rem", md: "4rem" });
-  const footerMarginTop = useBreakpointValue({ base: 4, sm: 8, md: 12 });
+  const footerMarginTop = useBreakpointValue({ base: 4, sm: 6, md: 8 });
   const descriptionFontSize = useBreakpointValue({ base: "xl", md: "2xl" });
   const ctaMarginTop = useBreakpointValue({ base: 4, md: 8 });
   const ctaMarginBottom = useBreakpointValue({ base: 2, md: 3 });
@@ -136,7 +135,7 @@ export default function Home({ siteConfig }) {
       case "about":
         return `About ${productInfo.sharedProductName}`;
       case "claim":
-        return `We're Glad to Have You Here!`;
+        return `We're Glad You're Here!`;
     }
   };
 
@@ -196,21 +195,6 @@ export default function Home({ siteConfig }) {
     }
   }, [stripeCustomer]);
 
-  // DEVELOPMENT HELP
-  // ---------------
-
-  const clearLocalStorage = () => {
-    setScid(null);
-    setPurchased(false);
-  };
-
-  if (process.env.NODE_ENV === "development") {
-    // console.log(props);
-    // console.log("stripeCustomerId, ", scid);
-    // console.log("hasPurchased, ", purchased);
-    // console.table(stripeCustomer);
-  }
-
   // LOADING STATE
   // ---------------
   if (isLoadingProduct || isLoadingStripeCustomer) {
@@ -223,21 +207,6 @@ export default function Home({ siteConfig }) {
 
   return (
     <>
-      {process.env.NODE_ENV === "development" && (
-        <Box
-          width="100%"
-          p={1}
-          background="blue.500"
-          {...{ display: "flex", align: "center", justify: "between" }}
-        >
-          <Text color="white" mr="auto">
-            NODE_ENV: {process.env.NODE_ENV}
-          </Text>
-          <Button size="xs" colorScheme="whiteAlpha" onClick={clearLocalStorage}>
-            Clear Local Storage
-          </Button>
-        </Box>
-      )}
       <Head>
         <link rel="icon" href="/favicon.ico" /> {/* TODO: make favicon */}
       </Head>
@@ -250,7 +219,7 @@ export default function Home({ siteConfig }) {
         alignItems="center"
         justifyContent="center"
         flexDir="column"
-        p={{ base: 4, sm: 8, md: 12 }}
+        p={{ base: 4, sm: 6, md: 8 }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%">
           <HStack>
@@ -311,7 +280,7 @@ export default function Home({ siteConfig }) {
           </Heading>
 
           {/* SINKER */}
-          <TextBlock
+          <Block
             value={productInfo.sharedProductDescription}
             color="muted"
             textAlign="center"
@@ -342,7 +311,7 @@ export default function Home({ siteConfig }) {
                   )}
                   <input type="hidden" name="mode" value={mode} />
                   <Button colorScheme={colorScheme} width="100%" type="submit">
-                    <TextBlock value={ctaText} />
+                    <Block value={ctaText} />
                   </Button>
                 </chakra.form>
               </Box>
@@ -350,10 +319,10 @@ export default function Home({ siteConfig }) {
           </ButtonGroup>
 
           {/* ENTICE */}
-          <TextBlock value={promo} textAlign="center" fontSize={14} mt={2} />
+          <Block value={promo} textAlign="center" fontSize={14} mt={2} />
 
           {/* AGITATE */}
-          <TextBlock value={fomo} textAlign="center" fontSize={14} mt={2} color="gray.500" />
+          <Block value={fomo} textAlign="center" fontSize={14} mt={2} color="gray.500" />
         </Flex>
         <chakra.footer mt={footerMarginTop}>
           <Link
@@ -397,7 +366,7 @@ export default function Home({ siteConfig }) {
               {founderInfo.founderName}
             </Link>
           </Text>
-          <TextBlock value={getActiveModalContent()} />
+          <Block value={getActiveModalContent()} />
         </Dialog>
       </Box>
     </>
