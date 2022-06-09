@@ -1,7 +1,7 @@
 // REACT + UTIL LIBRARIES
 // ---------------
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { isEmpty } from "utils";
@@ -53,7 +53,6 @@ export default function Home({ siteConfig }) {
   // ---------------
 
   const router = useRouter();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const { showAlert } = useAlerts();
 
   // DESTRUCTURING
@@ -81,6 +80,7 @@ export default function Home({ siteConfig }) {
     promo,
     fomo,
     seo,
+    rewardText,
   } = funnels[0]; // TODO: automatically handle A/B testing https://www.plasmic.app/blog/nextjs-ab-testing
 
   const { stripeTestProductId, stripeLiveProductId, activeStripeCouponCode } = stripe;
@@ -126,6 +126,28 @@ export default function Home({ siteConfig }) {
   const { isLoadingStripeCustomer, stripeCustomer } = useStripeCustomer({
     scid,
   });
+
+  // DIALOG
+  // ---------------
+
+  const [activeDialog, setActiveDialog] = useState("");
+  const getActiveModalTitle = () => {
+    switch (activeDialog) {
+      case "about":
+        return `About ${productInfo.sharedProductName}`;
+      case "claim":
+        return `We're Glad to Have You Here!`;
+    }
+  };
+
+  const getActiveModalContent = () => {
+    switch (activeDialog) {
+      case "about":
+        return about;
+      case "claim":
+        return rewardText;
+    }
+  };
 
   // ON LOAD
   // ---------------
@@ -253,7 +275,7 @@ export default function Home({ siteConfig }) {
               leftIcon={<>ℹ️</>}
               fontWeight={400}
               _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
-              onClick={onOpen}
+              onClick={() => setActiveDialog("about")}
             >
               More
             </Button>
@@ -263,7 +285,7 @@ export default function Home({ siteConfig }) {
               icon={<>ℹ️</>}
               fontSize={24}
               _hover={{ fontWeight: 500, color: `${colorScheme}.500` }}
-              onClick={onOpen}
+              onClick={() => setActiveDialog("about")}
             />
           )}
         </Box>
@@ -300,7 +322,7 @@ export default function Home({ siteConfig }) {
           {/* BITE */}
           <ButtonGroup spacing="2" mt={ctaMarginTop} mb={ctaMarginBottom}>
             {purchased && scid && (
-              <Button leftIcon="⭐️" colorScheme="blue">
+              <Button leftIcon="⭐️" colorScheme="blue" onClick={() => setActiveDialog("claim")}>
                 Get Access Now!
               </Button>
             )}
@@ -358,9 +380,9 @@ export default function Home({ siteConfig }) {
         </chakra.footer>
         <Dialog
           {...{
-            onClose,
-            isOpen,
-            title: `About ${productInfo.sharedProductName}`,
+            onClose: () => setActiveDialog(""),
+            isOpen: !!activeDialog,
+            title: getActiveModalTitle(),
             borderRadius: 0,
           }}
         >
@@ -375,7 +397,7 @@ export default function Home({ siteConfig }) {
               {founderInfo.founderName}
             </Link>
           </Text>
-          <TextBlock value={about} />
+          <TextBlock value={getActiveModalContent()} />
         </Dialog>
       </Box>
     </>
