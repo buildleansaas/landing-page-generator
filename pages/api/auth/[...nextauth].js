@@ -12,7 +12,7 @@ import { imageBuilder } from "lib/sanity";
 import prisma from "lib/api/prisma";
 import { getDomain } from "utils";
 
-const providersMap = {
+const supportedProvidersMap = {
   github: GithubProvider,
   google: GoogleProvider,
 };
@@ -22,8 +22,7 @@ export default async function auth(req, res) {
 
   let providers = [];
 
-  Object.entries(providersMap).forEach(([key, value]) => {
-    console.log(siteConfig?.[key]);
+  Object.entries(supportedProvidersMap).forEach(([key, value]) => {
     const { oauthEnabled, clientId, clientSecret } = siteConfig?.[key] ?? {};
 
     if (!!clientId && !!clientSecret && oauthEnabled) {
@@ -44,18 +43,6 @@ export default async function auth(req, res) {
         // Allows callback URLs on the same origin
         else if (new URL(url).origin === baseUrl) return url;
         return baseUrl;
-      },
-      async jwt({ token, account }) {
-        // Persist the OAuth access_token to the token right after signin
-        if (account) {
-          token.accessToken = account.access_token;
-        }
-        return token;
-      },
-      async session({ session, token, user }) {
-        // Send properties to the client, like an access_token from a provider.
-        session.accessToken = token.accessToken;
-        return session;
       },
     },
     theme: {

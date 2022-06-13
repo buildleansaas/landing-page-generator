@@ -1,6 +1,7 @@
 import React from "react";
-import { chakra } from "@chakra-ui/react";
+import { chakra, Image } from "@chakra-ui/react";
 import { PortableText } from "@portabletext/react";
+import YouTube from "react-youtube";
 import sanity from "lib/sanity";
 
 const Block = ({ value, ...componentProps }) => {

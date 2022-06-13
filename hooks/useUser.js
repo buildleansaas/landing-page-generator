@@ -10,9 +10,13 @@ export default function useUser() {
     isLoading: dbUserLoading,
     error,
     data: dbUser = {},
-  } = useQuery("user", async () => await fetch(`/api/users/${session?.user?.email}`), {
-    enabled: session?.user?.email,
-  });
+  } = useQuery(
+    "user",
+    async () => await fetch(`/api/users/${session?.user?.email}`).then((res) => res.json()),
+    {
+      enabled: !!session?.user?.email,
+    }
+  );
 
   if (error) {
     showAlert({

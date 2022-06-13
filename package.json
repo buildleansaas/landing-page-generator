@@ -30,6 +30,7 @@
     "react-icons": "^4.4.0",
     "react-query": "^3.39.1",
     "react-responsive-embed": "^2.1.0",
+    "react-youtube": "^9.0.2",
     "stripe": "^9.5.0",
     "tawkto-react": "^3.0.1"
   },

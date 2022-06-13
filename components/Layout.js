@@ -41,36 +41,6 @@ export default function Layout({
 }) {
   const { asPath } = useRouter();
   const { user, userIsLoading } = useUser();
-  const [checkingSubscription, setCheckingSubscription] = useState(false);
-
-  const checkSubscriptionStatus = async () =>
-    await fetch(`/api/stripe/customers/${user?.uid}`).then((res) => res.json());
-
-  useEffect(() => {
-    (async () => {
-      if (!userIsLoading && !isEmpty(user) && !checkingSubscription) {
-        setCheckingSubscription(true);
-        const subscriptionPlan = await checkSubscriptionStatus();
-
-        console.log(subscriptionPlan);
-
-        const cleanup = () => {
-          setCheckingSubscription(false);
-        };
-
-        cleanup();
-      }
-    })();
-  }, [user, userIsLoading]);
-
-  useEffect(() => {
-    (async () =>
-      !userIsLoading &&
-      !isEmpty(user) &&
-      !user?.is_subscribed &&
-      user?.stripe_customer_id &&
-      checkSubscriptionStatus())();
-  }, [user, userIsLoading, checkSubscriptionStatus]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") {

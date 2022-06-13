@@ -17,7 +17,7 @@ import {
 import { isEmpty } from "lodash";
 import NextLink from "next/link";
 import { FiMenu } from "react-icons/fi";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
 import { imageBuilder } from "lib/sanity";
 
@@ -104,7 +104,7 @@ export default function Navbar({
 
   const navLinks = () =>
     [
-      {
+      !isEmpty(user) && {
         name: "chat",
         href: community,
         label: "Community",
@@ -112,7 +112,9 @@ export default function Navbar({
         target: "_blank",
         rel: "noopener",
       },
-    ]?.map((props) => <NavButton key={props.href} {...{ ...props, onClose }} />);
+    ]
+      .filter(Boolean)
+      ?.map((props) => <NavButton key={props.href} {...{ ...props, onClose }} />);
 
   return (
     <Flex
@@ -131,18 +133,20 @@ export default function Navbar({
               {navLinks()}
             </ButtonGroup>
             {!isEmpty(user) ? (
-              <NextLink href="/me" passHref>
-                <Avatar fontSize={8} boxSize="8" name={user.displayName} src={user.photoURL} />
-              </NextLink>
+              <IconButton
+                icon={<Avatar fontSize={8} boxSize="8" name={user.name} src={user.image} />}
+                onClick={signOut}
+                variant="ghost"
+              />
             ) : (
               <Button
                 size="sm"
-                aria-label="Account"
+                aria-label="Signup"
                 variant="ghost"
                 leftIcon={<>👋</>}
                 onClick={() => signIn()}
               >
-                Account
+                Signup
               </Button>
             )}
           </HStack>

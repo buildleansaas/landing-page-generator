@@ -1,8 +1,6 @@
 import { stripe } from "lib/api/stripe";
-import { getProjectConfig } from "lib/sanity/config";
 import { getSession } from "next-auth/react";
 import { getUserByEmail, updateUser } from "queries/user";
-import { getDomain } from "utils";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
@@ -11,25 +9,7 @@ export default async function handler(req, res) {
       const user = await getUserByEmail(authSession.user.email);
 
       const { origin } = req.headers;
-      const siteConfig = await getProjectConfig(await getDomain(req));
-
-      const {
-        stripeTestProductId,
-        stripeLiveProductId,
-        activeStripeCouponCode: coupon,
-      } = siteConfig.stripe;
-
-      const prodRes = await fetch(
-        `${origin}/api/stripe/products/${
-          process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId
-        }`
-      );
-
-      const product = await prodRes.json();
-      const { prices } = product;
-      const price = prices?.[0]; // TODO: expand price selection options
-      const mode = price?.type === "one_time" ? "payment" : "subscription";
-      const price_id = price?.id;
+      const { price_id, mode, coupon } = req.body;
 
       const customer = user?.stripeCustomerId
         ? { id: user?.stripeCustomerId }

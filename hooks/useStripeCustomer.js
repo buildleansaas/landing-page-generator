@@ -3,14 +3,13 @@ import { useQuery } from "react-query";
 import useAlerts from "./useAlerts";
 
 const useStripeCustomer = ({ scid }) => {
-  console.log(typeof scid);
   const { showAlert } = useAlerts();
   const {
     isLoading: isLoadingStripeCustomer,
     error: stripeCustomerError,
     data: stripeCustomer,
   } = useQuery("stripeCustomer", () => fetch(`/api/stripe/customers/${scid}`).then((res) => res.json()), {
-    enabled: typeof scid !== undefined,
+    enabled: Boolean(typeof scid !== "undefined"),
   });
 
   if (stripeCustomerError) {

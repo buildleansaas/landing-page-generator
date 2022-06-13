@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { isEmpty } from "utils";
 import {
+  Box,
   Button,
   ButtonGroup,
   chakra,
   Flex,
   Heading,
+  IconButton,
   Link,
   Text,
   useBreakpointValue,
@@ -25,7 +27,6 @@ import { getDomain, formatDate } from "utils";
 
 import useUser from "hooks/useUser";
 import useAlerts from "hooks/useAlerts";
-import useStorage from "hooks/useStorage";
 import useStripeProduct from "hooks/useStripeProduct";
 import useStripeCustomer from "hooks/useStripeCustomer";
 
@@ -67,20 +68,24 @@ export default function Home({ siteConfig }) {
     youtube,
     // sanity blocks
     ctaText,
-    signupText,
+    signupCtaText,
+    signupTeaser,
+    signupReward,
+    defaultAuth,
     promo,
     fomo,
     seo,
     rewardText,
   } = funnels[0]; // TODO: automatically handle A/B testing https://www.plasmic.app/blog/nextjs-ab-testing
 
-  const { stripeTestProductId, stripeLiveProductId } = stripe;
+  const { stripeTestProductId, stripeLiveProductId, activeStripeCouponCode } = stripe;
 
   // STATE & PROPS
   // ---------------
 
+  const productId = process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId;
   const { isLoadingProduct, product } = useStripeProduct({
-    productId: process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId,
+    productId,
   });
 
   const { prices } = product ?? {};
@@ -91,6 +96,10 @@ export default function Home({ siteConfig }) {
     scid: user.stripeCustomerId,
   });
 
+  const userHasPurchased = Boolean(
+    stripeCustomer?.subscriptions.find(({ plan }) => plan.product === productId)
+  );
+
   // ON LOAD
   // ---------------
   // - Manage stripe payment confirmations / cancellations
@@ -98,15 +107,6 @@ export default function Home({ siteConfig }) {
   // ---------------
 
   useEffect(() => {
-    if (!isEmpty(stripeCustomer)) {
-      console.log(stripeCustomer);
-    }
-  }, [stripeCustomer]);
-
-  useEffect(() => {
-    /* `/api/stripe/checkout?price_id${price?.id}&mode=${mode}${
-      activeStripeCouponCode ? `&coupon=${activeStripeCouponCode}` : ""
-    }${scid ? `&scid=${scid}` */
     if (router.isReady) {
       if (router.query.success) {
         showAlert({
@@ -131,6 +131,8 @@ export default function Home({ siteConfig }) {
         return `About ${sharedProductName}`;
       case "claim":
         return `We're Glad You're Here!`;
+      case "signupReward":
+        return `Hope You're Excited to Get Started!`;
     }
   };
 
@@ -140,6 +142,8 @@ export default function Home({ siteConfig }) {
         return about;
       case "claim":
         return rewardText;
+      case "signupReward":
+        return signupReward;
     }
   };
 
@@ -159,14 +163,13 @@ export default function Home({ siteConfig }) {
     mt: "4",
   };
 
-  console.log(user);
-
   return (
     <Layout
       {...{
         id: revisionName,
         seo,
-        loading: isLoadingProduct || isLoadingStripeCustomer || user.loading,
+        loading:
+          isLoadingProduct || isLoadingStripeCustomer || (user.stripeCustomerId && isEmpty(stripeCustomer)),
         tawkTo,
         google,
         colorScheme,
@@ -180,7 +183,7 @@ export default function Home({ siteConfig }) {
         socialLinks,
       }}
     >
-      <Flex flex="1" flexDir="column" alignItems="center" justify="center" maxW={768} margin="0 auto">
+      <Flex flex="1" flexDir="column" alignItems="center" justify="center" maxW={888} margin="0 auto">
         {/* VIDEO_SALES_LETTER */}
         {!!youtube && (
           <ResponsiveEmbed src={`https://www.youtube.com/embed/${youtube}?controls=0`} allowFullScreen />
@@ -212,42 +215,60 @@ export default function Home({ siteConfig }) {
 
         {/* BITE */}
         <ButtonGroup spacing="2" mt={ctaMarginTop} mb={ctaMarginBottom}>
-          {false && (
+          {userHasPurchased && (
             <Button leftIcon="⭐️" colorScheme="blue" onClick={() => setActiveDialog("claim")}>
-              Get Access Now!
+              Claim Access
             </Button>
           )}
-          {false && mode === "subscription" && (
-            <chakra.form action={`/api/stripe/customers/portals/${scid}`} method="POST" mx={1}>
+          {userHasPurchased && mode === "subscription" && (
+            <chakra.form
+              action={`/api/stripe/customers/portals/${user.stripeCustomerId}`}
+              method="POST"
+              mx={1}
+            >
               <Button width="100%" type="submit" leftIcon="🏦">
                 Billing
               </Button>
             </chakra.form>
           )}
-          {isEmpty(user) ? (
-            <Button colorScheme={colorScheme} onClick={signIn} type="submit">
-              <Block value={signupText} />
+          {isEmpty(user) && (
+            <Button colorScheme={colorScheme} onClick={() => signIn(defaultAuth)} type="submit">
+              <Block value={signupCtaText} />
             </Button>
-          ) : (
-            <chakra.form action="/api/stripe/checkout" method="POST" width="100%" maxW={320}>
-              {user?.stripeCustomerId && <input type="hidden" name="scid" value={user?.stripeCustomerId} />}
-              <input type="hidden" name="price_id" value={price?.id} />
-              {activeStripeCouponCode && (
-                <input type="hidden" name="coupon" value={activeStripeCouponCode} />
-              )}
-              <input type="hidden" name="mode" value={mode} />
-              <Button colorScheme={colorScheme} width="100%" type="submit">
-                <Block value={ctaText} />
-              </Button>
-            </chakra.form>
+          )}
+          {!userHasPurchased && !isEmpty(user) && (
+            <>
+              <chakra.form action="/api/stripe/checkout" method="POST">
+                {user?.stripeCustomerId && (
+                  <input type="hidden" name="scid" value={user?.stripeCustomerId} />
+                )}
+                <input type="hidden" name="price_id" value={price?.id} />
+                {activeStripeCouponCode && (
+                  <input type="hidden" name="coupon" value={activeStripeCouponCode} />
+                )}
+                <input type="hidden" name="mode" value={mode} />
+                <Button colorScheme={colorScheme} width="100%" type="submit">
+                  <Block value={ctaText} />
+                </Button>
+              </chakra.form>
+              <IconButton icon={<>🎁</>} onClick={() => setActiveDialog("signupReward")} />
+            </>
           )}
         </ButtonGroup>
 
-        {/* ENTICE */}
-        <Block value={promo} textAlign="center" fontSize={14} mt={2} />
+        <Box maxW={600} margin="0 auto" textAlign="center">
+          {isEmpty(user) && <Block value={signupTeaser} fontSize={14} />}
 
-        {/* AGITATE */}
-        <Block value={fomo} textAlign="center" fontSize={14} mt={2} color="gray.500" />
+          {!isEmpty(user) && (isEmpty(stripeCustomer) || !userHasPurchased) && (
+            <>
+              {/* ENTICE */}
+              <Block value={promo} fontSize={14} />
+
+              {/* AGITATE */}
+              <Block value={fomo} fontSize={14} color="gray.500" />
+            </>
+          )}
+        </Box>
       </Flex>
       <Dialog
         {...{
