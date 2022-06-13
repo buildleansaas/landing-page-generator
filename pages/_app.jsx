@@ -1,25 +1,18 @@
-import { ChakraProvider, Spinner, Flex } from "@chakra-ui/react";
-import { Suspense } from "react";
+import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "react-query";
+
+import { SessionProvider } from "next-auth/react";
 
 const queryClient = new QueryClient();
 
-function MyApp({ Component, pageProps }) {
+export default function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
-    <Suspense
-      fallback={
-        <Flex align="center" justify="center" height="100vh" width="100vw">
-          <Spinner size="xl" />
-        </Flex>
-      }
-    >
-      <QueryClientProvider client={queryClient}>
-        <ChakraProvider>
+    <ChakraProvider>
+      <SessionProvider session={session}>
+        <QueryClientProvider client={queryClient}>
           <Component {...pageProps} />
-        </ChakraProvider>
-      </QueryClientProvider>
-    </Suspense>
+        </QueryClientProvider>
+      </SessionProvider>
+    </ChakraProvider>
   );
 }
-
-export default MyApp;

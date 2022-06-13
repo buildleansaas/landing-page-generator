@@ -10,6 +10,15 @@ const Block = ({ value, ...componentProps }) => {
   return (
     <PortableText
       components={{
+        marks: {
+          highlight: ({ children }) => (
+            <chakra.span
+              {...{ ...componentProps, backgroundColor: `#F3E779`, py: 1, px: 2, borderRadius: 2 }}
+            >
+              {children}
+            </chakra.span>
+          ),
+        },
         types: {
           youtube: ({ value }) => {
             const { url } = value;
