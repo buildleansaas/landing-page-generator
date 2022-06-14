@@ -24,41 +24,43 @@ import { imageBuilder } from "lib/sanity";
 import Dialog from "components/Dialog";
 import Footer from "components/Footer";
 
-const AppHeader = ({ onClose, sharedProductLogo, sharedProductName, sharedProductSlogan }) => (
-  <NextLink href="/" passHref>
-    <Box display="flex" alignItems="center" justifyContent="flex-start" onClick={onClose}>
-      <Image
-        {...{
-          src: imageBuilder(sharedProductLogo).height(54).width(54).url(),
-          height: 12,
-          alt: "",
-        }}
-      />
-      <Box
-        display={{ base: "flex" }}
-        flexDir="column"
-        alignItems={{ base: "flex-start" }}
-        justifyContent={{ base: "center" }}
-        ml={{ base: 2 }}
-        mt={{ base: 0 }}
-        onClick={onClose}
-      >
-        <Text fontSize={{ base: 20, md: 24 }} letterSpacing="tight" color="black" fontWeight={700}>
-          {sharedProductName}
-        </Text>
-        <Text
-          mt={{ base: 0, lg: -1.5 }}
-          fontSize={{ base: 12, md: 14 }}
-          fontWeight={300}
-          letterSpacing="tight"
-          color="black"
+const AppHeader = ({ onClose, sharedProductLogo, sharedProductName, sharedProductSlogan, isDesktop }) => {
+  return (
+    <NextLink href="/" passHref>
+      <Box display="flex" alignItems="center" justifyContent="flex-start" onClick={onClose}>
+        <Image
+          {...{
+            src: imageBuilder(sharedProductLogo).height(500).width(500).url(),
+            height: isDesktop ? 20 : 12,
+            alt: "",
+          }}
+        />
+        <Box
+          display={{ base: "flex" }}
+          flexDir="column"
+          alignItems={{ base: "flex-start" }}
+          justifyContent={{ base: "center" }}
+          ml={{ base: 2 }}
+          mt={{ base: 0 }}
+          onClick={onClose}
         >
-          {sharedProductSlogan}
-        </Text>
+          <Text fontSize={{ base: 20, md: 24 }} letterSpacing="tight" color="black" fontWeight={700}>
+            {sharedProductName}
+          </Text>
+          <Text
+            mt={{ base: 0, lg: -1.5 }}
+            fontSize={{ base: 12, md: 14 }}
+            fontWeight={300}
+            letterSpacing="tight"
+            color="black"
+          >
+            {sharedProductSlogan}
+          </Text>
+        </Box>
       </Box>
-    </Box>
-  </NextLink>
-);
+    </NextLink>
+  );
+};
 
 const NavButton = ({ id, onClose, name, href, label, icon, sharedProductLogo, ...rest }) => (
   <NextLink href={href} passHref>
@@ -95,12 +97,19 @@ export default function Navbar({
   sharedProductLogo,
   sharedProductSlogan,
 }) {
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const padding = useBreakpointValue({ base: 2, md: 4, lg: 6 });
 
-  const appHeaderProps = { id, sharedProductLogo, sharedProductName, sharedProductSlogan, onClose };
+  const appHeaderProps = {
+    id,
+    sharedProductLogo,
+    sharedProductName,
+    sharedProductSlogan,
+    onClose,
+    isDesktop,
+  };
 
   const navLinks = () =>
     [

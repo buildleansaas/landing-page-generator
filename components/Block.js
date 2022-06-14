@@ -1,5 +1,6 @@
 import React from "react";
-import { chakra, Image } from "@chakra-ui/react";
+import NextLink from "next/link";
+import { chakra, Image, Link } from "@chakra-ui/react";
 import { PortableText } from "@portabletext/react";
 import YouTube from "react-youtube";
 import sanity from "lib/sanity";
@@ -19,6 +20,21 @@ const Block = ({ value, ...componentProps }) => {
               {children}
             </chakra.span>
           ),
+          link: ({ children, value }) => (
+            <Link href={value.url} isExternal>
+              {children}
+            </Link>
+          ),
+          internalLink: ({ children, value }) => {
+            const { slug = {} } = value;
+            const href = `/${slug?.current}`;
+
+            return (
+              <NextLink href={href} isExternal>
+                {children}
+              </NextLink>
+            );
+          },
         },
         types: {
           youtube: ({ value }) => {

@@ -4,18 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { isEmpty } from "utils";
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  chakra,
-  Flex,
-  Heading,
-  IconButton,
-  Link,
-  Text,
-  useBreakpointValue,
-} from "@chakra-ui/react";
+import { Box, Button, chakra, Flex, Heading, Link, Text, useBreakpointValue } from "@chakra-ui/react";
 import ResponsiveEmbed from "react-responsive-embed";
 
 // PROJECT CONFIGURATION
@@ -130,9 +119,9 @@ export default function Home({ siteConfig }) {
       case "about":
         return `About ${sharedProductName}`;
       case "claim":
-        return `We're Glad You're Here!`;
+        return `Accessing Your Rewards`;
       case "signupReward":
-        return `Hope You're Excited to Get Started!`;
+        return `Enjoy these Freebies`;
     }
   };
 
@@ -162,6 +151,13 @@ export default function Home({ siteConfig }) {
     fontSize: "xl",
     mt: "4",
   };
+
+  const sharedCtaButtonStyles = {
+    m: 2,
+    width: "100%",
+  };
+
+  const ctaButtonTextProps = { fontSize: 16, fontWeight: 500 };
 
   return (
     <Layout
@@ -214,47 +210,69 @@ export default function Home({ siteConfig }) {
         />
 
         {/* BITE */}
-        <ButtonGroup spacing="2" mt={ctaMarginTop} mb={ctaMarginBottom}>
+        <Box mt={ctaMarginTop} mb={ctaMarginBottom} display="flex" alignItems="flex-start" flexWrap="wrap">
           {userHasPurchased && (
-            <Button leftIcon="⭐️" colorScheme="blue" onClick={() => setActiveDialog("claim")}>
+            <Button
+              leftIcon="⭐️"
+              colorScheme="blue"
+              onClick={() => setActiveDialog("claim")}
+              {...sharedCtaButtonStyles}
+            >
               Claim Access
             </Button>
           )}
           {userHasPurchased && mode === "subscription" && (
-            <chakra.form
-              action={`/api/stripe/customers/portals/${user.stripeCustomerId}`}
-              method="POST"
-              mx={1}
+            <Button
+              type="submit"
+              leftIcon="🏦"
+              onClick={() =>
+                fetch(`/api/stripe/customers/portals/${user.stripeCustomerId}`, { method: "POST" })
+              }
+              {...sharedCtaButtonStyles}
             >
-              <Button width="100%" type="submit" leftIcon="🏦">
-                Billing
-              </Button>
-            </chakra.form>
+              Billing
+            </Button>
           )}
           {isEmpty(user) && (
-            <Button colorScheme={colorScheme} onClick={() => signIn(defaultAuth)} type="submit">
-              <Block value={signupCtaText} />
+            <Button
+              colorScheme={colorScheme}
+              onClick={() => signIn(defaultAuth)}
+              type="submit"
+              {...sharedCtaButtonStyles}
+            >
+              <Block value={signupCtaText} {...ctaButtonTextProps} />
             </Button>
           )}
           {!userHasPurchased && !isEmpty(user) && (
             <>
-              <chakra.form action="/api/stripe/checkout" method="POST">
-                {user?.stripeCustomerId && (
-                  <input type="hidden" name="scid" value={user?.stripeCustomerId} />
-                )}
-                <input type="hidden" name="price_id" value={price?.id} />
-                {activeStripeCouponCode && (
-                  <input type="hidden" name="coupon" value={activeStripeCouponCode} />
-                )}
-                <input type="hidden" name="mode" value={mode} />
-                <Button colorScheme={colorScheme} width="100%" type="submit">
-                  <Block value={ctaText} />
-                </Button>
-              </chakra.form>
-              <IconButton icon={<>🎁</>} onClick={() => setActiveDialog("signupReward")} />
+              <Button
+                colorScheme={colorScheme}
+                type="submit"
+                {...sharedCtaButtonStyles}
+                onClick={() =>
+                  fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    body: {
+                      scid: user?.stripeCustomerId,
+                      price_id: price?.id,
+                      coupon: activeStripeCouponCode,
+                    },
+                  })
+                }
+              >
+                <Block value={ctaText} {...ctaButtonTextProps} />
+              </Button>
+              <Button
+                leftIcon="🎁"
+                colorScheme="gray"
+                onClick={() => setActiveDialog("signupReward")}
+                {...sharedCtaButtonStyles}
+              >
+                Freebies
+              </Button>
             </>
           )}
-        </ButtonGroup>
+        </Box>
 
         <Box maxW={600} margin="0 auto" textAlign="center">
           {isEmpty(user) && <Block value={signupTeaser} fontSize={14} />}

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Script from "next/script";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { NextSeo } from "next-seo";
-import { isEmpty } from "lodash";
 import TawkTo from "tawkto-react";
 
 import { imageBuilder } from "lib/sanity";
@@ -69,9 +69,14 @@ export default function Layout({
   };
 
   const wrapperMarginTop = useBreakpointValue({ base: 8 });
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   return (
     <>
+      <Head>
+        <link rel="shortcut icon" href={imageBuilder(sharedProductLogo).height(16).width(16).url()} />
+      </Head>
+
       <NextSeo {...SEO} />
 
       {/* TODO: PWA support */}
