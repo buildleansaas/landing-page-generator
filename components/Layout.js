@@ -50,19 +50,21 @@ export default function Layout({
   }, []);
 
   const SEO = {
-    title: seo.title,
-    description: seo.description,
-    facebook: {
-      appId: facebook?.facebookAppId,
-    },
+    title: seo?.title,
+    description: seo?.description,
+    ...(facebook?.facebookAppId && {
+      facebook: {
+        appId: facebook?.facebookAppId,
+      },
+    }),
     openGraph: {
-      title: seo.title,
-      description: seo.description,
+      title: seo?.title,
+      description: seo?.description,
       type: "website",
       locale: "en_IE",
       site_name: sharedProductName,
       url: asPath,
-      images: [imageBuilder(seo.image).width(630).height(1200).url()],
+      images: [imageBuilder(seo?.image).height(1200).width(630).url()],
     },
   };
 
@@ -74,19 +76,26 @@ export default function Layout({
 
       {/* TODO: PWA support */}
 
-      <Script id="gtag" src={`https://www.googletagmanager.com/gtag/js?id=${google.googleTagManagerId}`} />
-      <Script
-        id="init-gtag"
-        dangerouslySetInnerHTML={{
-          __html: `
+      {google.googleTagManagerId && (
+        <>
+          <Script
+            id="gtag"
+            src={`https://www.googletagmanager.com/gtag/js?id=${google.googleTagManagerId}`}
+          />
+          <Script
+            id="init-gtag"
+            dangerouslySetInnerHTML={{
+              __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
           
             gtag('config', '${google.googleTagManagerId}');
             `,
-        }}
-      />
+            }}
+          />
+        </>
+      )}
 
       {loading || userIsLoading ? (
         <Box
@@ -144,9 +153,7 @@ export default function Layout({
               flex={flexChildValue}
               mt={wrapperMarginTop}
             >
-              <Stack spacing={childSpacing} width="100%" {...{ overflowX: "auto" }}>
-                {children}
-              </Stack>
+              {children}
             </Box>
             <Footer {...{ socialLinks, companyName, companyLink, colorScheme }} />
           </Box>
