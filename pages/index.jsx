@@ -6,18 +6,19 @@ import { useRouter } from "next/router";
 import { isEmpty } from "utils";
 import { Box, Button, chakra, Flex, Heading, Link, Text, useBreakpointValue } from "@chakra-ui/react";
 import ResponsiveEmbed from "react-responsive-embed";
+import { loadStripe } from "@stripe/stripe-js";
+import { getSession, signIn } from "next-auth/react";
+import { getUserByEmail } from "queries/user";
 
 // PROJECT CONFIGURATION
 // ---------------
 
 import { getProjectConfig } from "lib/sanity/config";
+import { stripe } from "lib/api/stripe";
 
 import { getDomain, formatDate } from "utils";
 
-import useUser from "hooks/useUser";
 import useAlerts from "hooks/useAlerts";
-import useStripeProduct from "hooks/useStripeProduct";
-import useStripeCustomer from "hooks/useStripeCustomer";
 
 // COMPONENTS
 // ---------------
@@ -29,24 +30,14 @@ import Layout from "components/Layout";
 // LANGING PAGE RENDER
 // ---------------
 
-export default function Home({ siteConfig }) {
-  const { signIn, user } = useUser();
-  // HOOK UTILITIES
-  // ---------------
-
-  const router = useRouter();
-  const { showAlert } = useAlerts();
-
+export default function Home({ siteConfig = {}, user = {}, funnel = {}, prices = [], hasPurchased }) {
   // DESTRUCTURING
   // ---------------
-
-  const { funnels, about, tawkTo, stripe, google, founderInfo, productInfo, socialInfo } = siteConfig ?? {};
-
+  const { about, tawkTo, stripe, google, founderInfo, productInfo, socialInfo } = siteConfig;
   const { sharedProductDescription, sharedProductLogo, sharedProductSlogan, sharedProductName } =
     productInfo;
   const { community, socialLinks } = socialInfo;
-  const { companyName, founderLink, founderName } = founderInfo;
-
+  const { companyName, founderLink, founderName, companyFooterLink: companyLink } = founderInfo;
   // TODO: extend for the type (destructuring is based upon this)
   const {
     revisionName,
@@ -65,34 +56,52 @@ export default function Home({ siteConfig }) {
     fomo,
     seo,
     rewardText,
-  } = funnels[0]; // TODO: automatically handle A/B testing https://www.plasmic.app/blog/nextjs-ab-testing
+  } = funnel; // TODO: automatically handle A/B testing https://www.plasmic.app/blog/nextjs-ab-testing
+  const { activeStripeCouponCode } = stripe;
 
-  const { stripeTestProductId, stripeLiveProductId, activeStripeCouponCode } = stripe;
+  const price = prices?.[0]; // TODO: expand price selection options
+
+  // HOOK UTILITIES
+  // ---------------
+
+  const router = useRouter();
+  const { showAlert } = useAlerts();
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // STATE & PROPS
   // ---------------
 
-  const productId = process.env.NODE_ENV === "development" ? stripeTestProductId : stripeLiveProductId;
-  const { isLoadingProduct, product } = useStripeProduct({
-    productId,
-  });
-
-  const { prices } = product ?? {};
-  const price = prices?.[0]; // TODO: expand price selection options
   const mode = price?.type === "one_time" ? "payment" : "subscription";
 
-  const { isLoadingStripeCustomer, stripeCustomer } = useStripeCustomer({
-    scid: user.stripeCustomerId,
-  });
+  // FUNCTIONS
+  // --------------
 
-  const userHasPurchased = Boolean(
-    stripeCustomer?.subscriptions.find(({ plan }) => plan.product === productId)
-  );
+  const [preparingCheckout, setPreparingCheckout] = useState(false);
+  const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC);
+  const handleStripeCheckout = async () => {
+    setPreparingCheckout(true);
+    const stripe = await stripePromise;
+    const checkoutSession = await fetch("/api/stripe/checkout", {
+      method: "POST",
+      body: JSON.stringify({
+        price_id: price?.id,
+        coupon: activeStripeCouponCode,
+        mode,
+      }),
+    }).then((res) => res.json());
+
+    const result = await stripe.redirectToCheckout({
+      sessionId: checkoutSession.id,
+    });
+
+    if (result.error) {
+      showAlert({ title: result.error.message });
+    }
+
+    setPreparingCheckout(false);
+  };
 
   // ON LOAD
-  // ---------------
-  // - Manage stripe payment confirmations / cancellations
-  // - Init Tawk.to
   // ---------------
 
   useEffect(() => {
@@ -154,7 +163,7 @@ export default function Home({ siteConfig }) {
 
   const sharedCtaButtonStyles = {
     m: 2,
-    width: "100%",
+    ...(!isDesktop && { width: "100%" }),
   };
 
   const ctaButtonTextProps = { fontSize: 16, fontWeight: 500 };
@@ -164,19 +173,20 @@ export default function Home({ siteConfig }) {
       {...{
         id: revisionName,
         seo,
-        loading:
-          isLoadingProduct || isLoadingStripeCustomer || (user.stripeCustomerId && isEmpty(stripeCustomer)),
+        loading: preparingCheckout,
         tawkTo,
         google,
         colorScheme,
         socialInfo,
         companyName,
+        companyLink,
         sharedProductName,
         sharedProductLogo,
         sharedProductName,
         sharedProductSlogan,
         community,
         socialLinks,
+        user,
       }}
     >
       <Flex flex="1" flexDir="column" alignItems="center" justify="center" maxW={888} margin="0 auto">
@@ -210,8 +220,15 @@ export default function Home({ siteConfig }) {
         />
 
         {/* BITE */}
-        <Box mt={ctaMarginTop} mb={ctaMarginBottom} display="flex" alignItems="flex-start" flexWrap="wrap">
-          {userHasPurchased && (
+        <Box
+          mt={ctaMarginTop}
+          mb={ctaMarginBottom}
+          display="flex"
+          alignItems={isDesktop ? "flex-start" : "center"}
+          flexWrap="wrap"
+          flexDir={isDesktop ? "row" : "column"}
+        >
+          {hasPurchased && (
             <Button
               leftIcon="⭐️"
               colorScheme="blue"
@@ -221,7 +238,7 @@ export default function Home({ siteConfig }) {
               Claim Access
             </Button>
           )}
-          {userHasPurchased && mode === "subscription" && (
+          {hasPurchased && mode === "subscription" && (
             <Button
               type="submit"
               leftIcon="🏦"
@@ -243,22 +260,13 @@ export default function Home({ siteConfig }) {
               <Block value={signupCtaText} {...ctaButtonTextProps} />
             </Button>
           )}
-          {!userHasPurchased && !isEmpty(user) && (
+          {!hasPurchased && !isEmpty(user) && (
             <>
               <Button
                 colorScheme={colorScheme}
                 type="submit"
                 {...sharedCtaButtonStyles}
-                onClick={() =>
-                  fetch("/api/stripe/checkout", {
-                    method: "POST",
-                    body: {
-                      scid: user?.stripeCustomerId,
-                      price_id: price?.id,
-                      coupon: activeStripeCouponCode,
-                    },
-                  })
-                }
+                onClick={handleStripeCheckout}
               >
                 <Block value={ctaText} {...ctaButtonTextProps} />
               </Button>
@@ -277,7 +285,7 @@ export default function Home({ siteConfig }) {
         <Box maxW={600} margin="0 auto" textAlign="center">
           {isEmpty(user) && <Block value={signupTeaser} fontSize={14} />}
 
-          {!isEmpty(user) && (isEmpty(stripeCustomer) || !userHasPurchased) && (
+          {!hasPurchased && !isEmpty(user) && (
             <>
               {/* ENTICE */}
               <Block value={promo} fontSize={14} />
@@ -313,14 +321,89 @@ export default function Home({ siteConfig }) {
   );
 }
 
+const EMPTY_DATA = { data: [] };
+
 export const getServerSideProps = async ({ req, res }) => {
   res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
 
-  const siteConfig = await getProjectConfig(await getDomain(req));
+  const { funnels, stripe: stripeKeys, ...siteConfig } = await getProjectConfig(await getDomain(req));
+  const productId =
+    process.env.NODE_ENV === "development"
+      ? stripeKeys.stripeTestProductId
+      : stripeKeys.stripeLiveProductId;
+
+  const session = await getSession({ req });
+
+  const user = session?.user?.email ? await getUserByEmail(session?.user?.email) : {};
+
+  const customer = user?.stripeCustomerId ? await stripe.customers.retrieve(user.stripeCustomerId) : {};
+
+  const { data: subscriptions = [] } = customer.id
+    ? await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "active",
+      })
+    : EMPTY_DATA;
+
+  const { data: paymentIntents = [] } = customer.id
+    ? await stripe.paymentIntents.list({
+        customer: customer.id,
+        limit: 100,
+      })
+    : EMPTY_DATA;
+
+  // TODO: store on database somehow
+  const hasPurchased = await Promise.all(
+    paymentIntents
+      .filter((pi) => pi.status === "succeeded")
+      .map(async (paymentIntent) => {
+        const { data: sessions = [] } = await stripe.checkout.sessions.list({
+          payment_intent: paymentIntent.id,
+        });
+
+        const stripeSession = sessions.filter((s) => s.mode === "payment")[0] ?? {};
+
+        if (stripeSession.status === "complete" && stripeSession.payment_status === "paid") {
+          const { data: lineItems = [] } =
+            sessions.length > 0 ? await stripe.checkout.sessions.listLineItems(sessions[0].id) : EMPTY_DATA;
+
+          return Boolean(lineItems.find((lineItem) => lineItem.price.product === productId));
+        } else return false;
+      })
+  ).then((res) => res.filter(Boolean));
+
+  const stripeCustomer = {
+    ...customer,
+    subscriptions,
+  };
+
+  const product = await stripe.products.retrieve(String(productId));
+
+  if (isEmpty(product)) {
+    return res.status(406).send({ message: "Product not found" });
+  }
+
+  const { data: prices } = await stripe.prices.list({
+    limit: 100,
+    product: productId,
+    active: true,
+  });
+
+  if (isEmpty(prices)) {
+    return res.status(406).send({ message: "Product has no prices!" });
+  }
+
+  const hasSubscription = Boolean(
+    stripeCustomer?.subscriptions.find(({ plan }) => plan.product === productId)
+  );
 
   return {
     props: {
-      siteConfig,
+      siteConfig: { ...siteConfig, stripe: stripeKeys },
+      user,
+      funnel: funnels[0],
+      prices,
+      hasPurchased: hasSubscription || hasPurchased.length > 0,
     },
   };
 };

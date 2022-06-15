@@ -2,8 +2,8 @@ import React from "react";
 import NextLink from "next/link";
 import { chakra, Image, Link } from "@chakra-ui/react";
 import { PortableText } from "@portabletext/react";
-import YouTube from "react-youtube";
 import sanity from "lib/sanity";
+import ResponsiveEmbed from "react-responsive-embed";
 
 const Block = ({ value, ...componentProps }) => {
   const sharedProps = { ...componentProps };
@@ -40,7 +40,9 @@ const Block = ({ value, ...componentProps }) => {
           youtube: ({ value }) => {
             const { url } = value;
             const id = getYouTubeId(url);
-            return <YouTube className="responsive-video" videoId={id} />;
+            return (
+              <ResponsiveEmbed src={`https://www.youtube.com/embed/${id}?controls=0`} allowFullScreen />
+            );
           },
           image: ({ value }) => (
             <figure>

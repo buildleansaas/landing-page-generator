@@ -9,12 +9,11 @@ import { imageBuilder } from "lib/sanity";
 
 import { Box, Fade, useBreakpointValue, Stack, Spinner } from "@chakra-ui/react";
 
-import useUser from "hooks/useUser";
-
 import Navbar from "components/Navbar";
 import Footer from "components/Footer";
 
 export default function Layout({
+  user,
   id,
   colorScheme,
   // integrations
@@ -30,7 +29,7 @@ export default function Layout({
   sharedProductName,
   sharedProductSlogan,
   seo,
-  // state / auth
+  // loading,
   loading,
   //  styling
   childSpacing = 1,
@@ -40,7 +39,6 @@ export default function Layout({
   children,
 }) {
   const { asPath } = useRouter();
-  const { user, userIsLoading } = useUser();
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") {
@@ -69,7 +67,6 @@ export default function Layout({
   };
 
   const wrapperMarginTop = useBreakpointValue({ base: 8 });
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   return (
     <>
@@ -102,7 +99,7 @@ export default function Layout({
         </>
       )}
 
-      {loading || userIsLoading ? (
+      {loading ? (
         <Box
           {...{
             display: "flex",
@@ -113,13 +110,7 @@ export default function Layout({
           }}
         >
           <Fade in>
-            <Spinner
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color={`${colorScheme}.500`}
-              size="xl"
-            />
+            <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="black" size="xl" />
           </Fade>
         </Box>
       ) : (

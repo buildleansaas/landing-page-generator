@@ -14,9 +14,8 @@ import {
   VStack,
   Divider,
 } from "@chakra-ui/react";
-import { isEmpty } from "lodash";
+import { isEmpty } from "utils";
 import NextLink from "next/link";
-import { FiMenu } from "react-icons/fi";
 import { signIn, signOut } from "next-auth/react";
 
 import { imageBuilder } from "lib/sanity";
@@ -163,7 +162,13 @@ export default function Navbar({
       ) : (
         <IconButton
           variant="ghost"
-          icon={<FiMenu fontSize="1.33rem" />}
+          icon={
+            <svg viewBox="0 0 100 80" width="40" height="40">
+              <rect width="100" height="20"></rect>
+              <rect y="30" width="100" height="20"></rect>
+              <rect y="60" width="100" height="20"></rect>
+            </svg>
+          }
           aria-label="Open Menu"
           onClick={onOpen}
         />

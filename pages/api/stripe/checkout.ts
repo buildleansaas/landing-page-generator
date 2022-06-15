@@ -3,13 +3,14 @@ import { getSession } from "next-auth/react";
 import { getUserByEmail, updateUser } from "queries/user";
 
 export default async function handler(req, res) {
+  console.log(req.body);
   if (req.method === "POST") {
     try {
       const authSession = await getSession({ req });
       const user = await getUserByEmail(authSession.user.email);
 
       const { origin } = req.headers;
-      const { price_id, mode, coupon } = req.body;
+      const { price_id, mode, coupon } = JSON.parse(req.body);
 
       const customer = user?.stripeCustomerId
         ? { id: user?.stripeCustomerId }
@@ -18,6 +19,8 @@ export default async function handler(req, res) {
       if (!user.stripeCustomerId) {
         await updateUser(authSession.user.email, { stripeCustomerId: customer.id });
       }
+
+      console.log(price_id, mode, coupon);
 
       // Create Checkout Sessions from body params.
       const session = await stripe.checkout.sessions.create({
@@ -45,7 +48,7 @@ export default async function handler(req, res) {
           enabled: true,
         },
       });
-      res.redirect(303, session.url);
+      res.status(200).json({ id: session.id });
     } catch (err) {
       res.status(err.statusCode || 500).json(err.message);
     }
