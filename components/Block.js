@@ -21,7 +21,7 @@ const Block = ({ value, ...componentProps }) => {
             </chakra.span>
           ),
           link: ({ children, value }) => (
-            <Link href={value.url} isExternal>
+            <Link color={`blue.500`} href={value.url} isExternal>
               {children}
             </Link>
           ),

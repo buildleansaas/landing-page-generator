@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, useBreakpointValue } from "@chakra-ui/react";
-import SocialLinks from "components/SocialLinks";
-import { Copyright } from "components/Copyright";
+import SocialLinks from "./SocialLinks";
+import { Copyright } from "./Copyright";
 
 export default function Footer({ companyName, companyLink, socialLinks, colorScheme }) {
   const footerMarginTop = useBreakpointValue({ base: 4, sm: 6, md: 8 });

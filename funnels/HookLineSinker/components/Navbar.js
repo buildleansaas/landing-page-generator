@@ -21,45 +21,43 @@ import { signIn, signOut } from "next-auth/react";
 import { imageBuilder } from "lib/sanity";
 
 import Dialog from "components/Dialog";
-import Footer from "components/Footer";
+import Footer from "./Footer";
 
-const AppHeader = ({ onClose, sharedProductLogo, sharedProductName, sharedProductSlogan, isDesktop }) => {
-  return (
-    <NextLink href="/" passHref>
-      <Box display="flex" alignItems="center" justifyContent="flex-start" onClick={onClose}>
-        <Image
-          {...{
-            src: imageBuilder(sharedProductLogo).height(500).width(500).url(),
-            height: isDesktop ? 20 : 12,
-            alt: "",
-          }}
-        />
-        <Box
-          display={{ base: "flex" }}
-          flexDir="column"
-          alignItems={{ base: "flex-start" }}
-          justifyContent={{ base: "center" }}
-          ml={{ base: 2 }}
-          mt={{ base: 0 }}
-          onClick={onClose}
+const AppHeader = ({ onClose, sharedProductLogo, sharedProductName, sharedProductSlogan, isDesktop }) => (
+  <NextLink href="/" passHref>
+    <Box display="flex" alignItems="center" justifyContent="flex-start" onClick={onClose}>
+      <Image
+        {...{
+          src: imageBuilder(sharedProductLogo).height(500).width(500).url(),
+          height: isDesktop ? 20 : 12,
+          alt: "",
+        }}
+      />
+      <Box
+        display={{ base: "flex" }}
+        flexDir="column"
+        alignItems={{ base: "flex-start" }}
+        justifyContent={{ base: "center" }}
+        ml={{ base: 2 }}
+        mt={{ base: 0 }}
+        onClick={onClose}
+      >
+        <Text fontSize={{ base: 20, md: 24 }} letterSpacing="tight" color="black" fontWeight={700}>
+          {sharedProductName}
+        </Text>
+        <Text
+          mt={{ base: 0, lg: -1.5 }}
+          fontSize={{ base: 12, md: 14 }}
+          fontWeight={300}
+          letterSpacing="tight"
+          color="black"
         >
-          <Text fontSize={{ base: 20, md: 24 }} letterSpacing="tight" color="black" fontWeight={700}>
-            {sharedProductName}
-          </Text>
-          <Text
-            mt={{ base: 0, lg: -1.5 }}
-            fontSize={{ base: 12, md: 14 }}
-            fontWeight={300}
-            letterSpacing="tight"
-            color="black"
-          >
-            {sharedProductSlogan}
-          </Text>
-        </Box>
+          {sharedProductSlogan}
+        </Text>
       </Box>
-    </NextLink>
-  );
-};
+    </Box>
+  </NextLink>
+);
 
 const NavButton = ({ id, onClose, name, href, label, icon, sharedProductLogo, ...rest }) => (
   <NextLink href={href} passHref>

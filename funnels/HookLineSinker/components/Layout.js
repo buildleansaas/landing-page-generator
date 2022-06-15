@@ -9,8 +9,8 @@ import { imageBuilder } from "lib/sanity";
 
 import { Box, Fade, useBreakpointValue, Stack, Spinner } from "@chakra-ui/react";
 
-import Navbar from "components/Navbar";
-import Footer from "components/Footer";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function Layout({
   user,
