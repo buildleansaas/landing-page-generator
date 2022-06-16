@@ -12,9 +12,9 @@ import {
 } from "@chakra-ui/react";
 
 const Dialog = ({ onSave, onClose, isOpen, title, children, saveButtonText = "Save", ...props }) => (
-  <Modal isOpen={isOpen} onClose={onClose} size="full" {...props}>
+  <Modal isOpen={isOpen} onClose={onClose} size="4xl" {...props}>
     <ModalOverlay />
-    <ModalContent>
+    <ModalContent borderRadius={0}>
       <ModalHeader>{title}</ModalHeader>
       <ModalCloseButton />
       <ModalBody pb={6}>{children}</ModalBody>

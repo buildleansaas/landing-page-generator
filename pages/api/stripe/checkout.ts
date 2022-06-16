@@ -1,12 +1,26 @@
 import { stripe } from "lib/api/stripe";
+import { getSession } from "next-auth/react";
+import { getUserByEmail, updateUser } from "queries/user";
+
+import { stripeCustomerEnvIdKey, getUserStripeId } from "utils";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { origin } = req.headers;
-    const { price_id, mode, coupon, scid } = req.body;
-    const customer = scid ? { id: scid } : await stripe.customers.create();
-
     try {
+      const authSession = await getSession({ req });
+      const user = await getUserByEmail(authSession.user.email);
+
+      const { origin } = req.headers;
+      const { price_id, mode, coupon } = JSON.parse(req.body);
+
+      const stripeCustomerId = getUserStripeId(user);
+
+      const customer = stripeCustomerId ? { id: stripeCustomerId } : await stripe.customers.create();
+
+      if (!stripeCustomerId) {
+        await updateUser(authSession.user.email, { [stripeCustomerEnvIdKey]: customer.id });
+      }
+
       // Create Checkout Sessions from body params.
       const session = await stripe.checkout.sessions.create({
         line_items: [
@@ -24,8 +38,8 @@ export default async function handler(req, res) {
             }),
         customer: customer.id,
         mode: mode,
-        success_url: `${origin}/?success=true&scid=${customer?.id}`,
-        cancel_url: `${origin}/?canceled=true&scid=${customer?.id}`,
+        success_url: `${origin}/?success=true`,
+        cancel_url: `${origin}/?canceled=true`,
         consent_collection: {
           promotions: "auto",
         },
@@ -33,7 +47,7 @@ export default async function handler(req, res) {
           enabled: true,
         },
       });
-      res.redirect(303, session.url);
+      res.status(200).json({ id: session.id });
     } catch (err) {
       res.status(err.statusCode || 500).json(err.message);
     }

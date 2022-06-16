@@ -1,5 +1,19 @@
 import { getProjectDomains } from "lib/sanity/config";
-import { MONTHS } from "constants";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 // TODO: hacky rewrite this please.
 const trimHost = (host) => {
@@ -23,13 +37,14 @@ export const getDomain = async (req) => {
   }
 };
 
-export const isEmpty = (value) => {
-  return (
-    value == null || // From standard.js: Always use === - but obj == null is allowed to check null || undefined
-    (typeof value === "object" && Object.keys(value).length === 0) ||
-    (typeof value === "string" && value.trim().length === 0)
-  );
-};
-
 export const formatDate = (date) =>
   MONTHS[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+
+export function isEmpty(obj) {
+  return Object.prototype.toString.call(obj) === "[object Object]" && JSON.stringify(obj) === "{}";
+}
+
+export const stripeCustomerEnvIdKey =
+  process.env.NODE_ENV === "development" ? "stripeTestCustomerId" : "stripeLiveCustomerId";
+
+export const getUserStripeId = (user) => user[stripeCustomerEnvIdKey];
