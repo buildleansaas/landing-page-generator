@@ -45,7 +45,7 @@ model User {
   accounts             Account[]
   sessions             Session[]
   stripeTestCustomerId String?
-  stripeLiveCustomerId String?
+  stripeCustomerId     String?
 }
 
 model VerificationToken {

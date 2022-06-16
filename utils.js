@@ -45,6 +45,6 @@ export function isEmpty(obj) {
 }
 
 export const stripeCustomerEnvIdKey =
-  process.env.NODE_ENV === "development" ? "stripeTestCustomerId" : "stripeLiveCustomerId";
+  process.env.NODE_ENV === "development" ? "stripeTestCustomerId" : "stripeCustomerId";
 
 export const getUserStripeId = (user) => user[stripeCustomerEnvIdKey];

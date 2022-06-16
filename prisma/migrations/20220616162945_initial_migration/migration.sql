@@ -6,6 +6,7 @@ CREATE TABLE "Account" (
     "provider" TEXT NOT NULL,
     "providerAccountId" TEXT NOT NULL,
     "refresh_token" TEXT,
+    "refresh_token_expires_in" INTEGER,
     "access_token" TEXT,
     "expires_at" INTEGER,
     "token_type" TEXT,
@@ -33,6 +34,8 @@ CREATE TABLE "User" (
     "email" TEXT,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
+    "stripeTestCustomerId" TEXT,
+    "stripeLiveCustomerId" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
