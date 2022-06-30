@@ -41,7 +41,23 @@ const EMPTY_DATA = { data: [] };
 export const getServerSideProps = async ({ req, res }) => {
   res.setHeader("Cache-Control", "public, s-maxage=10, stale-while-revalidate=59");
 
-  const { stripe: stripeKeys, ...siteConfig } = await getProjectConfig(await getDomain(req));
+  const {
+    stripe: stripeKeys,
+    redirect,
+    redirectUrl,
+    ...siteConfig
+  } = await getProjectConfig(await getDomain(req));
+
+  if (redirect && redirectUrl) {
+    if (res) {
+      res.writeHead(307, { Location: redirectUrl });
+      res.end();
+    } else {
+      window.location = redirectUrl;
+      await new Promise((resolve) => {});
+    }
+    return {};
+  }
 
   const productId =
     process.env.NODE_ENV === "development"
